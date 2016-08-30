@@ -168,12 +168,14 @@ namespace Battleships.Control
                 DrawAtBox(new Tile(x, y), result);
                 MainForm.Log($"Shooting at {tile}, It's a {result.ToLower()}");
                 if (s != null && s.IsSunk())
-                    MainForm.Log($"You sunk the enemy's {s.Name}!");
-                if (MainForm.EnemyFleetDestroyed())
                 {
-                    MainForm.Log("You destoyed the enemy's fleet!");
-                    MainForm.State = FormMain.GameState.End;
-                    return true;
+                    MainForm.Log($"You sunk the enemy's {s.Name}!");
+                    if (MainForm.EnemyFleetDestroyed())
+                    {
+                        MainForm.Log("You destoyed the enemy's fleet!");
+                        MainForm.State = FormMain.GameState.End;
+                        return true;
+                    }
                 }
 
                 MainForm.State = FormMain.GameState.TurnAi;
@@ -191,12 +193,12 @@ namespace Battleships.Control
                 {
                     sunk = true;
                     MainForm.Log($"The enemy sunk your {s.Name}..");
-                }
-                if (MainForm.PlayerFleetDestroyed())
-                {
-                    MainForm.Log("The enemy destroyed your fleet..");
-                    MainForm.State = FormMain.GameState.End;
-                    return true;
+                    if (MainForm.PlayerFleetDestroyed())
+                    {
+                        MainForm.Log("The enemy destroyed your fleet..");
+                        MainForm.State = FormMain.GameState.End;
+                        return true;
+                    }
                 }
 
                 MainForm.State = FormMain.GameState.TurnPlayer;
@@ -213,12 +215,12 @@ namespace Battleships.Control
         {
             var r = new Random();
             bool hit;
-            bool sunk;
             bool result;
             do
             {
                 var x = r.Next(0, 10);
                 var y = r.Next(0, 10);
+                bool sunk;
                 result = Shoot(x, y, out hit, out sunk);
             } while (!result);
             return hit;
@@ -248,8 +250,8 @@ namespace Battleships.Control
         private Ship _detectedShip = new Ship();
         public void Think()
         {
-            bool hit = false;
-            bool sunk = false;
+            var hit = false;
+            var sunk = false;
             var count = _detectedShip.GetTiles().Count;
             var random = new Random();
 
@@ -267,7 +269,7 @@ namespace Battleships.Control
                 if (upTested && downTested)
                     _detectedShip.Direction = Direction.Horizontal;
 
-                bool redo = true;
+                var redo = true;
                 do
                 {
                     switch (random.Next(0, 4))
@@ -275,36 +277,25 @@ namespace Battleships.Control
                         case 0:
                             //shoot left
                             if (!leftTested)
-                            {
                                 redo = !Shoot(tile.X - 1, tile.Y, out hit, out sunk);
-                            }
                             break;
                         case 1:
                             //shoot right
                             if (!rightTested)
-                            {
                                 redo = !Shoot(tile.X + 1, tile.Y, out hit, out sunk);
-                            }
                             break;
                         case 2:
                             //shoot up
                             if (!upTested)
-                            {
                                 redo = !Shoot(tile.X, tile.Y - 1, out hit, out sunk);
-                            }
                             break;
                         case 3:
                             //shoot down
                             if (!downTested)
-                            {
                                 redo = !Shoot(tile.X, tile.Y + 1, out hit, out sunk);
-                            }
-                            break;
-                        default:
                             break;
                     }
                 } while (redo);
-
             }
             else if (count > 1)
             {
@@ -323,7 +314,7 @@ namespace Battleships.Control
                         if (!Shoot(tilelast.X, tilelast.Y + 1, out hit, out sunk))
                         {
                             Shoot(tilefirst.X, tilefirst.Y - 1, out hit, out sunk);
-                        }                        
+                        }
                     }
                     else
                     {
@@ -347,7 +338,7 @@ namespace Battleships.Control
                         if (!Shoot(tilelast.X - 1, tilelast.Y, out hit, out sunk))
                         {
                             Shoot(tilefirst.X + 1, tilefirst.Y, out hit, out sunk);
-                        }                        
+                        }
                     }
                 }
             }
