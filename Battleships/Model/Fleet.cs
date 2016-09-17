@@ -65,12 +65,9 @@ namespace Battleships.Model
 
         public string GetNameOfSunkShip(Ship ship)
         {
-            foreach (var s in AsList())
+            foreach (var s in AsList().Where(s => s.Equals(ship)))
             {
-                if (s.Equals(ship))
-                {
-                    return s.Name;
-                }
+                return s.Name;
             }
             return "";
         }
@@ -81,9 +78,7 @@ namespace Battleships.Model
                 return 5;
             if (!Carrier.IsSunk())
                 return 4;
-            if (!Submarine.IsSunk() || !Cruiser.IsSunk())
-                return 3;
-            return 2;
+            return !Submarine.IsSunk() || !Cruiser.IsSunk() ? 3 : 2;
         }
 
         public bool AllPlaced()

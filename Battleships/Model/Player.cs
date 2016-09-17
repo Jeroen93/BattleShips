@@ -8,7 +8,7 @@ namespace Battleships.Model
     {
         public Fleet Fleet { get; }
 
-        private Field _field;        
+        private readonly Field _field;        
 
         public Player(Field field)
         {
@@ -17,7 +17,7 @@ namespace Battleships.Model
         }
 
         private Ship _detectedShip = new Ship();
-        private Fleet _detectedFleet = new Fleet();
+        private readonly Fleet _detectedFleet = new Fleet();
 
         public void Think()
         {
@@ -30,10 +30,10 @@ namespace Battleships.Model
             if (count == 1)
             {
                 var tile = _detectedShip.GetTiles()[0];
-                var leftTested = tile.X == 0 || _field._shots.Contains(new Tile(tile.X - 1, tile.Y));
-                var rightTested = tile.X == 9 || _field._shots.Contains(new Tile(tile.X + 1, tile.Y));
-                var upTested = tile.Y == 0 || _field._shots.Contains(new Tile(tile.X, tile.Y - 1));
-                var downTested = tile.Y == 9 || _field._shots.Contains(new Tile(tile.X, tile.Y + 1));
+                var leftTested = tile.X == 0 || _field.Shots.Contains(new Tile(tile.X - 1, tile.Y));
+                var rightTested = tile.X == 9 || _field.Shots.Contains(new Tile(tile.X + 1, tile.Y));
+                var upTested = tile.Y == 0 || _field.Shots.Contains(new Tile(tile.X, tile.Y - 1));
+                var downTested = tile.Y == 9 || _field.Shots.Contains(new Tile(tile.X, tile.Y + 1));
 
                 if (leftTested && rightTested)
                     _detectedShip.Direction = Direction.Vertical;
@@ -116,9 +116,10 @@ namespace Battleships.Model
 
             //If it is a hit, add it to the ship
             if (hit)
-                _detectedShip.AddTile(_field._shots.Last());
+                _detectedShip.AddTile(_field.Shots.Last());
 
-            //If the ship is sunk, we are done with this ship
+            //If the ship is sunk, get the name of the sunken ship, and add the tiles to
+            //the same ship in the fleet the AI has already detected. Reset the ship afterwards
             if (sunk)
             {
                 var name = Fleet.GetNameOfSunkShip(_detectedShip);
@@ -131,7 +132,7 @@ namespace Battleships.Model
             if (count == 0 && ShootRandom())
             {
                 //If we have detected a ship, add the tile to our list
-                _detectedShip.AddTile(_field._shots.Last());
+                _detectedShip.AddTile(_field.Shots.Last());
             }
         }
 
@@ -139,7 +140,6 @@ namespace Battleships.Model
         {
             var r = new Random();
             bool hit;
-            bool result;
             do
             {
                 /*  - Pick random x and y
@@ -152,10 +152,43 @@ namespace Battleships.Model
                  */
                 var x = r.Next(0, 10);
                 var y = r.Next(0, 10);
+                var t = new Tile(x, y);
+
+                if (!IsValid(t)) continue;
+                if (!HasEnoughSpace(x, y)) continue;
                 bool sunk;
-                result = _field.Shoot(x, y, out hit, out sunk);
-            } while (!result);
+                _field.Shoot(x, y, out hit, out sunk);
+                break;
+            } while (true);
             return hit;
+        }
+
+        //Checks if a tile is within bounds, not already shot, and not adjacent to another ship
+        private bool IsValid(Tile t)
+        {
+            return t.X >= 0 && t.X <= 9 && t.Y >= 0 && t.Y <= 9
+                   && !_field.Shots.Contains(t)
+                   && !_detectedFleet.ScanTileForOccupation(t);
+        }
+
+        private bool HasEnoughSpace(int x, int y)
+        {
+            var reqLength = Fleet.GetSmallestLength();
+            var horizontal = CheckInDirection(x, y, -1, 0, reqLength) + CheckInDirection(x, y, 1, 0, reqLength);
+            var vertical = CheckInDirection(x, y, 0, -1, reqLength) + CheckInDirection(x, y, 0, -1, reqLength);
+            return horizontal >= reqLength || vertical >= reqLength;
+        }
+
+        private int CheckInDirection(int x, int y, int xOffset, int yOffset, int reqLength)
+        {
+            var foundLength = 1;
+            for (var i = 0; i < reqLength; i++)
+            {
+                if (!IsValid(new Tile(x + i*xOffset, y + i*yOffset)))
+                    break;
+                foundLength++;
+            }
+            return foundLength;
         }
     }
 }

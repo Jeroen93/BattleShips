@@ -17,6 +17,7 @@ namespace Battleships.Model
 
         public override string ToString()
         {
+            //Converts the tile to a coodinate. For example; 0,0 to A1
             return $"{GlobalVar.Letters[Y]}{X + 1}";
         }
 

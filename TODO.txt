@@ -1,0 +1,4 @@
+- Reset button
+- Hover ships when placing
+- Timeout in the AI
+- Show remaining ships when defeated

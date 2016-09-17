@@ -86,7 +86,7 @@ namespace Battleships
 
         public void Think()
         {
-            fieldMine._player.Think();
+            fieldMine.Player.Think();
         }
 
         private delegate void LogDelegate(string message);

@@ -11,9 +11,9 @@ namespace Battleships.Control
     public partial class Field : UserControl
     {
         private readonly PictureBox[,] _boxesArray;
-        public readonly Player _player;
-        public readonly List<Tile> _shots;
 
+        public readonly Player Player;
+        public readonly List<Tile> Shots;
         public FormMain MainForm;
         public bool IsAi;
         public bool Horizontal { get; set; }
@@ -22,8 +22,8 @@ namespace Battleships.Control
         {
             InitializeComponent();
             _boxesArray = FillArray();
-            _player = new Player(this);
-            _shots = new List<Tile>();
+            Player = new Player(this);
+            Shots = new List<Tile>();
             Horizontal = true;
         }
 
@@ -64,7 +64,7 @@ namespace Battleships.Control
                 case FormMain.GameState.Setup:
                     if (IsAi) //Only your field has a function
                         return;
-                    var selectedShip = MainForm.GetSelectedShip(_player);
+                    var selectedShip = MainForm.GetSelectedShip(Player);
                     if (!AddShip(x, y, selectedShip, true))
                         MessageBox.Show(@"Ship can't be placed here, one of the tiles is already occupied");
                     break;
@@ -98,7 +98,7 @@ namespace Battleships.Control
             for (var i = rOff; i < lOff; i++)
             {
                 var t = Horizontal ? new Tile(x + i, y) : new Tile(x, y + i);
-                if (!_player.Fleet.ScanTileForOccupation(t)) continue;
+                if (!Player.Fleet.ScanTileForOccupation(t)) continue;
                 return false;
             }
             for (var i = rOff; i < lOff; i++)
@@ -107,7 +107,7 @@ namespace Battleships.Control
             }
             if (!draw) return true;
             Drawship(ship);
-            MainForm.CheckStart(_player);
+            MainForm.CheckStart(Player);
             return true;
         }
 
@@ -136,7 +136,7 @@ namespace Battleships.Control
         public void PlaceShipsRandom(bool draw)
         {
             var r = new Random();
-            foreach (var ship in _player.Fleet.AsList())
+            foreach (var ship in Player.Fleet.AsList())
             {
                 bool result;
                 do
@@ -158,9 +158,9 @@ namespace Battleships.Control
                 return false;
 
             var tile = new Tile(x, y);
-            if (_shots.Contains(tile))
+            if (Shots.Contains(tile))
                 return false;
-            _shots.Add(tile);
+            Shots.Add(tile);
 
             if (IsAi)
             {
@@ -210,15 +210,15 @@ namespace Battleships.Control
 
         public bool FleetIsDestroyed()
         {
-            return _player.Fleet.IsDestroyed();
+            return Player.Fleet.IsDestroyed();
         }       
 
         public bool IsShotAHit(Tile t, out Ship s)
         {
             s = null;
-            if (!_player.Fleet.TileIsOccupied(t)) return false;
+            if (!Player.Fleet.TileIsOccupied(t)) return false;
             Tile tile;
-            _player.Fleet.GetHitTileAndShip(t, out tile, out s);
+            Player.Fleet.GetHitTileAndShip(t, out tile, out s);
             tile.IsHit = true;
             return true;
         }
