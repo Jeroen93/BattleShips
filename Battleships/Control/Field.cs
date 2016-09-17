@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Battleships.Model;
 
@@ -10,8 +11,8 @@ namespace Battleships.Control
     public partial class Field : UserControl
     {
         private readonly PictureBox[,] _boxesArray;
-        private readonly Player _player;
-        private readonly List<Tile> _shots;
+        public readonly Player _player;
+        public readonly List<Tile> _shots;
 
         public FormMain MainForm;
         public bool IsAi;
@@ -21,7 +22,7 @@ namespace Battleships.Control
         {
             InitializeComponent();
             _boxesArray = FillArray();
-            _player = new Player();
+            _player = new Player(this);
             _shots = new List<Tile>();
             Horizontal = true;
         }
@@ -148,7 +149,7 @@ namespace Battleships.Control
             }
         }
 
-        private bool Shoot(int x, int y, out bool hit, out bool sunk)
+        public bool Shoot(int x, int y, out bool hit, out bool sunk)
         {
             hit = false;
             sunk = false;
@@ -179,7 +180,8 @@ namespace Battleships.Control
                 }
 
                 MainForm.State = FormMain.GameState.TurnAi;
-                MainForm.Think();
+                Task.Factory.StartNew(() => MainForm.Think());
+                //MainForm.Think();
             }
             else
             {
@@ -209,22 +211,7 @@ namespace Battleships.Control
         public bool FleetIsDestroyed()
         {
             return _player.Fleet.IsDestroyed();
-        }
-
-        private bool ShootRandom()
-        {
-            var r = new Random();
-            bool hit;
-            bool result;
-            do
-            {
-                var x = r.Next(0, 10);
-                var y = r.Next(0, 10);
-                bool sunk;
-                result = Shoot(x, y, out hit, out sunk);
-            } while (!result);
-            return hit;
-        }
+        }       
 
         public bool IsShotAHit(Tile t, out Ship s)
         {
@@ -243,120 +230,16 @@ namespace Battleships.Control
 
         private void DrawAtBox(Tile t, string imageName)
         {
-            var path = Directory.GetCurrentDirectory();
-            GetBox(t).Load(path + $@"\Resources\{imageName}.bmp");
-        }
-
-        private Ship _detectedShip = new Ship();
-        public void Think()
-        {
-            var hit = false;
-            var sunk = false;
-            var count = _detectedShip.GetTiles().Count;
-            var random = new Random();
-
-            //if we have detected a tile of a ship
-            if (count == 1)
+            try
             {
-                var tile = _detectedShip.GetTiles()[0];
-                var leftTested = tile.X == 0 || _shots.Contains(new Tile(tile.X - 1, tile.Y));
-                var rightTested = tile.X == 9 || _shots.Contains(new Tile(tile.X + 1, tile.Y));
-                var upTested = tile.Y == 0 || _shots.Contains(new Tile(tile.X, tile.Y - 1));
-                var downTested = tile.Y == 9 || _shots.Contains(new Tile(tile.X, tile.Y + 1));
-
-                if (leftTested && rightTested)
-                    _detectedShip.Direction = Direction.Vertical;
-                if (upTested && downTested)
-                    _detectedShip.Direction = Direction.Horizontal;
-
-                var redo = true;
-                do
-                {
-                    switch (random.Next(0, 4))
-                    {
-                        case 0:
-                            //shoot left
-                            if (!leftTested)
-                                redo = !Shoot(tile.X - 1, tile.Y, out hit, out sunk);
-                            break;
-                        case 1:
-                            //shoot right
-                            if (!rightTested)
-                                redo = !Shoot(tile.X + 1, tile.Y, out hit, out sunk);
-                            break;
-                        case 2:
-                            //shoot up
-                            if (!upTested)
-                                redo = !Shoot(tile.X, tile.Y - 1, out hit, out sunk);
-                            break;
-                        case 3:
-                            //shoot down
-                            if (!downTested)
-                                redo = !Shoot(tile.X, tile.Y + 1, out hit, out sunk);
-                            break;
-                    }
-                } while (redo);
+                GetBox(t).Load(GlobalVar.Path + $@"\Resources\{imageName}.bmp");
             }
-            else if (count > 1)
+            catch (Exception)
             {
-                var tilefirst = _detectedShip.GetTiles().First();
-                var tilelast = _detectedShip.GetTiles().Last();
-
-                if (_detectedShip.Direction == Direction.Unknown)
-                {
-                    _detectedShip.Direction = tilefirst.X == tilelast.X ? Direction.Vertical : Direction.Horizontal;
-                }
-
-                if (_detectedShip.Direction == Direction.Vertical)
-                {
-                    if (tilelast.Y > tilefirst.Y)
-                    {
-                        if (!Shoot(tilelast.X, tilelast.Y + 1, out hit, out sunk))
-                        {
-                            Shoot(tilefirst.X, tilefirst.Y - 1, out hit, out sunk);
-                        }
-                    }
-                    else
-                    {
-                        if (!Shoot(tilelast.X, tilelast.Y - 1, out hit, out sunk))
-                        {
-                            Shoot(tilefirst.X, tilefirst.Y + 1, out hit, out sunk);
-                        }
-                    }
-                }
-                else
-                {
-                    if (tilelast.X > tilefirst.X)
-                    {
-                        if (!Shoot(tilelast.X + 1, tilelast.Y, out hit, out sunk))
-                        {
-                            Shoot(tilefirst.X - 1, tilefirst.Y, out hit, out sunk);
-                        }
-                    }
-                    else
-                    {
-                        if (!Shoot(tilelast.X - 1, tilelast.Y, out hit, out sunk))
-                        {
-                            Shoot(tilefirst.X + 1, tilefirst.Y, out hit, out sunk);
-                        }
-                    }
-                }
+                //The resource is still in use, wait 10ms then try again
+                Thread.Sleep(10);
+                DrawAtBox(t, imageName);
             }
-
-            //If it is a hit, add it to the ship
-            if (hit)
-                _detectedShip.AddTile(_shots.Last());
-
-            //If the ship is sunk, we are done with this ship
-            if (sunk)
-                _detectedShip = new Ship();
-
-            //We have nothing to investigate, shoot a random tile
-            if (count == 0 && ShootRandom())
-            {
-                //If we have detected a ship, add the tile to our list
-                _detectedShip.AddTile(_shots.Last());
-            }
-        }
+        }        
     }
 }

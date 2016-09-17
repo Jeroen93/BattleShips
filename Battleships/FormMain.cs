@@ -86,11 +86,18 @@ namespace Battleships
 
         public void Think()
         {
-            fieldMine.Think();
+            fieldMine._player.Think();
         }
+
+        private delegate void LogDelegate(string message);
 
         public void Log(string message)
         {
+            if (lbLog.InvokeRequired)
+            {
+                Invoke(new LogDelegate(Log), message);
+                return;
+            }
             lbLog.Items.Add(message);
             lbLog.TopIndex = lbLog.Items.Count - 1;
         }

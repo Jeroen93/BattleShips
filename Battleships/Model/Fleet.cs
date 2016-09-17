@@ -63,6 +63,29 @@ namespace Battleships.Model
             return new List<Ship> { Battleship, Carrier, Cruiser, Submarine, Destroyer };
         }
 
+        public string GetNameOfSunkShip(Ship ship)
+        {
+            foreach (var s in AsList())
+            {
+                if (s.Equals(ship))
+                {
+                    return s.Name;
+                }
+            }
+            return "";
+        }
+
+        public int GetSmallestLength()
+        {
+            if (!Battleship.IsSunk())
+                return 5;
+            if (!Carrier.IsSunk())
+                return 4;
+            if (!Submarine.IsSunk() || !Cruiser.IsSunk())
+                return 3;
+            return 2;
+        }
+
         public bool AllPlaced()
         {
             //Returns true if all ships in a player's fleet are placed

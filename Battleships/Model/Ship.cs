@@ -28,6 +28,11 @@ namespace Battleships.Model
             _tiles.Add(t);
         }
 
+        public void AddTiles(List<Tile> tiles)
+        {
+            tiles.ForEach(t => _tiles.Add(t));
+        }
+
         public List<Tile> GetTiles()
         {
             return _tiles;
@@ -52,6 +57,18 @@ namespace Battleships.Model
         {
             return _tiles.TrueForAll(t => t.IsHit);
         }
+
+        public bool Equals(Ship other)
+        {
+            foreach (var t in other._tiles)
+            {
+                if (!HitTest(t))
+                {
+                    return false;
+                }
+            }
+            return true;            
+        }        
     }
 
     public enum Direction
