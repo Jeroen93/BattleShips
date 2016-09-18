@@ -211,7 +211,7 @@ namespace Battleships.Control
         public bool FleetIsDestroyed()
         {
             return Player.Fleet.IsDestroyed();
-        }       
+        }
 
         public bool IsShotAHit(Tile t, out Ship s)
         {
@@ -240,6 +240,6 @@ namespace Battleships.Control
                 Thread.Sleep(10);
                 DrawAtBox(t, imageName);
             }
-        }        
+        }
     }
 }

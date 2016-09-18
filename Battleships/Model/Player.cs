@@ -8,7 +8,7 @@ namespace Battleships.Model
     {
         public Fleet Fleet { get; }
 
-        private readonly Field _field;        
+        private readonly Field _field;
 
         public Player(Field field)
         {
@@ -126,7 +126,7 @@ namespace Battleships.Model
                 var sunkShip = _detectedFleet.AsList().First(s => s.Name.Equals(name));
                 sunkShip.AddTiles(_detectedShip.GetTiles());
                 _detectedShip = new Ship();
-            }               
+            }
 
             //We have nothing to investigate, shoot a random tile
             if (count == 0 && ShootRandom())
@@ -174,8 +174,8 @@ namespace Battleships.Model
         private bool HasEnoughSpace(int x, int y)
         {
             var reqLength = Fleet.GetSmallestLength();
-            var horizontal = CheckInDirection(x, y, -1, 0, reqLength) + CheckInDirection(x, y, 1, 0, reqLength);
-            var vertical = CheckInDirection(x, y, 0, -1, reqLength) + CheckInDirection(x, y, 0, -1, reqLength);
+            var horizontal = CheckInDirection(x, y, -1, 0, reqLength) + CheckInDirection(x, y, 1, 0, reqLength) - 1;
+            var vertical = CheckInDirection(x, y, 0, -1, reqLength) + CheckInDirection(x, y, 0, -1, reqLength) - 1;
             return horizontal >= reqLength || vertical >= reqLength;
         }
 
@@ -184,7 +184,7 @@ namespace Battleships.Model
             var foundLength = 1;
             for (var i = 0; i < reqLength; i++)
             {
-                if (!IsValid(new Tile(x + i*xOffset, y + i*yOffset)))
+                if (!IsValid(new Tile(x + i * xOffset, y + i * yOffset)))
                     break;
                 foundLength++;
             }

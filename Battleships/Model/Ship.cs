@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Battleships.Model
 {
@@ -60,15 +61,8 @@ namespace Battleships.Model
 
         public bool Equals(Ship other)
         {
-            foreach (var t in other._tiles)
-            {
-                if (!HitTest(t))
-                {
-                    return false;
-                }
-            }
-            return true;            
-        }        
+            return other._tiles.All(HitTest);
+        }
     }
 
     public enum Direction
