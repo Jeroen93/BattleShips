@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Battleships.Control;
 
 namespace Battleships.Model
@@ -9,15 +10,18 @@ namespace Battleships.Model
         public Fleet Fleet { get; }
 
         private readonly Field _field;
+        private Ship _detectedShip;
+        private readonly Fleet _detectedFleet;
 
         public Player(Field field)
         {
             _field = field;
             Fleet = new Fleet();
+            _detectedShip = new Ship();
+            _detectedFleet = new Fleet();
         }
 
-        private Ship _detectedShip = new Ship();
-        private readonly Fleet _detectedFleet = new Fleet();
+        
 
         public void Think()
         {
@@ -25,6 +29,8 @@ namespace Battleships.Model
             var sunk = false;
             var count = _detectedShip.GetTiles().Count;
             var random = new Random();
+
+            Thread.Sleep(random.Next(100, 2000));
 
             //if we have detected a tile of a ship
             if (count == 1)
@@ -141,15 +147,7 @@ namespace Battleships.Model
             var r = new Random();
             bool hit;
             do
-            {
-                /*  - Pick random x and y
-                 *  - Check if it is within the field
-                 *  - Check if it hasn't been tried before
-                 *  - Check if the tile isn't adjecent to a ship
-                 *  - Check if there is enough space to place the smallest ship in each direction
-                 *  - If any of them fails, pick a new x and y
-                 *  - else, shoot there
-                 */
+            {                
                 var x = r.Next(0, 10);
                 var y = r.Next(0, 10);
                 var t = new Tile(x, y);

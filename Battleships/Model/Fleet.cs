@@ -74,6 +74,8 @@ namespace Battleships.Model
 
         public int GetSmallestLength()
         {
+            //Retuns the length of the biggest ship which has not been sunk
+            //Used by the AI to determine the space to look for
             if (!Battleship.IsSunk())
                 return 5;
             if (!Carrier.IsSunk())

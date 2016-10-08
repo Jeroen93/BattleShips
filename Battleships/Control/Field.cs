@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Battleships.Model;
+using Battleships.Util;
 
 namespace Battleships.Control
 {
@@ -12,8 +13,8 @@ namespace Battleships.Control
     {
         private readonly PictureBox[,] _boxesArray;
 
-        public readonly Player Player;
-        public readonly List<Tile> Shots;
+        public Player Player;
+        public List<Tile> Shots;
         public FormMain MainForm;
         public bool IsAi;
         public bool Horizontal { get; set; }
@@ -22,9 +23,17 @@ namespace Battleships.Control
         {
             InitializeComponent();
             _boxesArray = FillArray();
+            Reset();
+        }
+
+        public void Reset()
+        {
             Player = new Player(this);
             Shots = new List<Tile>();
             Horizontal = true;
+            for (int x = 0; x < 10; x++)
+                for (int y = 0; y < 10; y++)
+                    _boxesArray[y, x].Image = null;
         }
 
         public void SetFieldName(string text)
@@ -127,6 +136,20 @@ namespace Battleships.Control
             }
         }
 
+        public void DrawTilesNotHit()
+        {
+            foreach (var ship in Player.Fleet.AsList())
+            {
+                foreach (var tile in ship.GetTiles())
+                {
+                    if (!tile.IsHit)
+                    {
+                        DrawAtBox(tile, ship.Name);
+                    }
+                }
+            }
+        }
+
         private void ClearShip(Ship ship)
         {
             ship.GetTiles().ForEach(p => GetBox(p).Image = null);
@@ -174,14 +197,15 @@ namespace Battleships.Control
                     if (MainForm.EnemyFleetDestroyed())
                     {
                         MainForm.Log("You destoyed the enemy's fleet!");
-                        MainForm.State = FormMain.GameState.End;
+                        SoundUtil.PlayWin();
+                        MainForm.SetState(FormMain.GameState.End);
                         return true;
                     }
+                    SoundUtil.PlayExplosion();
                 }
 
-                MainForm.State = FormMain.GameState.TurnAi;
+                MainForm.SetState(FormMain.GameState.TurnAi);
                 Task.Factory.StartNew(() => MainForm.Think());
-                //MainForm.Think();
             }
             else
             {
@@ -198,12 +222,15 @@ namespace Battleships.Control
                     if (MainForm.PlayerFleetDestroyed())
                     {
                         MainForm.Log("The enemy destroyed your fleet..");
-                        MainForm.State = FormMain.GameState.End;
+                        MainForm.DrawRemainingTiles();
+                        SoundUtil.PlayLose();
+                        MainForm.SetState(FormMain.GameState.End);
                         return true;
                     }
+                    SoundUtil.PlayExplosion();
                 }
 
-                MainForm.State = FormMain.GameState.TurnPlayer;
+                MainForm.SetState(FormMain.GameState.TurnPlayer);
             }
             return true;
         }

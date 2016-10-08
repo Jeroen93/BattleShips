@@ -52,6 +52,11 @@ namespace Battleships
             return fieldMine.FleetIsDestroyed();
         }
 
+        public void DrawRemainingTiles()
+        {
+            fieldEnemy.DrawTilesNotHit();
+        }
+
         public void CheckStart(Player player)
         {
             btnStart.Enabled = player.Fleet.AllPlaced();
@@ -65,8 +70,34 @@ namespace Battleships
             End
         }
 
+        private delegate void SetStateDelegate(GameState state);
+
+        public void SetState(GameState state)
+        {
+            if (btnStart.InvokeRequired)
+            {
+                Invoke(new SetStateDelegate(SetState), state);
+                return;
+            }
+            State = state;
+            if (State == GameState.End)
+            {
+                btnStart.Enabled = true;
+            }
+        }
+
         private void btnStart_Click(object sender, EventArgs e)
         {
+            if (State == GameState.End)
+            {
+                gbShips.Enabled = true;
+                fieldEnemy.Reset();
+                fieldMine.Reset();
+                lbLog.Items.Clear();
+                State = GameState.Setup;
+                Log("Welcome to BattleShips! Place your ships to start");
+                return;
+            }
             gbShips.Enabled = btnStart.Enabled = false;
             var r = new Random();
             fieldEnemy.PlaceShipsRandom(false);
